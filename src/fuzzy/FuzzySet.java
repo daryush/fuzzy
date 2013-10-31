@@ -18,6 +18,16 @@ public class FuzzySet {
         this.name = name;
     }
     
+    FuzzySet(String[] params, MembershipFunction membershipFunction)
+    {
+        this.name = params[0];
+        HashMap<String, Double> mFunctionParams = new HashMap();
+        for (int i = 1; i<params.length; i+=2) {
+            mFunctionParams.put(params[i], Double.parseDouble(params[i+1]));
+        }
+        this.function = membershipFunction.getMembershipFunctionInstance(mFunctionParams);
+    }
+    
     void setMembershipFunction(MembershipFunction function)
     {
         this.function = function;

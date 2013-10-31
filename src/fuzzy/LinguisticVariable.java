@@ -29,6 +29,11 @@ public class LinguisticVariable {
         return this.name;
     }
     
+    public Set<String> getSetsKeys()
+    {
+        return this.sets.keySet();
+    }
+    
     public FuzzySet getSetByName(String name)
     {
         return this.sets.get(name);

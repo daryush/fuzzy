@@ -23,7 +23,7 @@ public class FuzzySystem {
     private AggregationOperator aggregationOperator;
     private Norms norms;
     
-    private ArrayList<Sentence> sentences;
+    private HashMap<String, Sentence> sentences;
     private ArrayList<Rule> rules;
     private HashMap<String, Double> userInput;
     private HashMap<String, Double> aggregationResult;
@@ -36,7 +36,7 @@ public class FuzzySystem {
         this.aggregationResult = new HashMap();
         this.inputLinguisticVariables = new HashMap();
         this.outputLinguisticVariables = new HashMap();
-        this.sentences = new ArrayList();
+        this.sentences = new HashMap();
         this.rules = new ArrayList();
         this.reader = new BufferedReader(new InputStreamReader(System.in));
     }
@@ -44,7 +44,9 @@ public class FuzzySystem {
     public void run() 
     {
         this.getProgrammingConfigurationFromUser();
-        this.createSystem();
+        this.getInputVariablesFromUser();
+        this.getOutputVariablesFromUser();
+        this.generateSentences();
         this.createRules();
         this.getSystemInput();
         this.calculateSentencesMembership();
@@ -53,27 +55,56 @@ public class FuzzySystem {
         this.showResult();
     }
     
-    public void getProgrammingConfigurationFromUser(){
+    public void getProgrammingConfigurationFromUser()
+    {   
+        String mFunctonName = this.getInputLine("Enter mFunction type name (triangle): ");
+        String implicationOperatorName = this.getInputLine("Enter implication operator type name (fodor): ");
+        String aggregationOperatorName = this.getInputLine("Enter aggregation operator type name (minimum): ");
+        String normsName = this.getInputLine("Enter norms type name (standard): ");
+        this.initialize(mFunctonName, implicationOperatorName, aggregationOperatorName, normsName);
         
-      String mFunctonName = null;
-      String implicationOperatorName = null;
-      String aggregationOperatorName = null;
-      String normsName = null;
-
-      try {
-        System.out.print("Enter mFunction type name: ");
-        mFunctonName = this.reader.readLine();
-        System.out.print("Enter implication operator type name: ");
-        implicationOperatorName = this.reader.readLine();
-        System.out.print("Enter aggregation operator type name: ");
-        aggregationOperatorName = this.reader.readLine();
-        System.out.print("Enter norms type name: ");
-        aggregationOperatorName = this.reader.readLine();
-      } catch (IOException ioe) {
-         System.out.println("IO error trying to read your name!");
-         System.exit(1);
-      }
-      this.initialize(mFunctonName, implicationOperatorName, aggregationOperatorName, normsName);
+    }
+    
+    public void getInputVariablesFromUser()
+    {
+        this.writeOutput("Define input variables (END_INPUT_VARS to finish): " + System.getProperty("line.separator"));
+        String varsInput;
+        while (!(varsInput = this.getInputLine(System.getProperty("line.separator"))).equals("END_INPUT_VARS")) {
+            if (!varsInput.equals("BEGIN_INPUT_VARS")) {
+                String lingVarName = varsInput;
+                LinguisticVariable lingVar = new LinguisticVariable(lingVarName);
+                String termsInput;
+                while (!(termsInput = this.getInputLine(System.getProperty("line.separator"))).equals("END_TERMS")) {
+                    if (!termsInput.equals("BEGIN_TERMS")) {
+                        String[] termParams = termsInput.split(" ");
+                        FuzzySet term = new FuzzySet(termParams, this.membershipFunction);
+                        lingVar.addFuzzySet(term);
+                    }
+                }
+                this.inputLinguisticVariables.put(lingVar.getName(), lingVar);
+            }
+        }
+    }
+    
+    public void getOutputVariablesFromUser()
+    {
+        this.writeOutput("Define output variables (END_OUTPUT_VARS to finish): " + System.getProperty("line.separator"));
+        String varsInput;
+        while (!(varsInput = this.getInputLine(System.getProperty("line.separator"))).equals("END_OUTPUT_VARS")) {
+            if (!varsInput.equals("BEGIN_OUTPUT_VARS")) {
+                String lingVarName = varsInput;
+                LinguisticVariable lingVar = new LinguisticVariable(lingVarName);
+                String termsInput;
+                while (!(termsInput = this.getInputLine(System.getProperty("line.separator"))).equals("END_TERMS")) {
+                    if (!termsInput.equals("BEGIN_TERMS")) {
+                        String[] termParams = termsInput.split(" ");
+                        FuzzySet term = new FuzzySet(termParams, this.membershipFunction);
+                        lingVar.addFuzzySet(term);
+                    }
+                }
+                this.outputLinguisticVariables.put(lingVar.getName(), lingVar);
+            }
+        }
     }
     
     public void initialize(
@@ -96,125 +127,78 @@ public class FuzzySystem {
         
     }
     
-    public void createSystem()
+    
+    public void generateSentences()
     {
-        //stworzenie zmienny lingwistycznych i termsów (z funkcjamiprzynaleznosci)
-        String name = "temperatura";
-        LinguisticVariable temp = new LinguisticVariable(name);
-        
-        HashMap<String, Double> niskaParams = new HashMap();
-        HashMap<String, Double> sredniaParams = new HashMap();
-        HashMap<String, Double> wysokaParams = new HashMap();
-        HashMap<String, Double> piecMocnoParams = new HashMap();
-        HashMap<String, Double> piecSrednioParams = new HashMap();
-        HashMap<String, Double> piecLekkoParams = new HashMap();
-        
-        niskaParams.put("a", 0.0);
-        niskaParams.put("b", 5.0);
-        niskaParams.put("c", 10.0);
-        
-        sredniaParams.put("a", 7.0);
-        sredniaParams.put("b", 12.0);
-        sredniaParams.put("c", 17.0);
-        
-        wysokaParams.put("a", 15.0);
-        wysokaParams.put("b", 20.0);
-        wysokaParams.put("c", 25.0);
-        
-        piecMocnoParams.put("a", 70.0);
-        piecMocnoParams.put("b", 80.0);
-        piecMocnoParams.put("c", 85.0);
-        
-        piecSrednioParams.put("a", 60.0);
-        piecSrednioParams.put("b", 65.0);
-        piecSrednioParams.put("c", 75.0);
-        
-        piecLekkoParams.put("a", 50.0);
-        piecLekkoParams.put("b", 55.0);
-        piecLekkoParams.put("c", 65.0);
-        
-        
-        FuzzySet niska = new FuzzySet("niska");
-        niska.setMembershipFunction(this.membershipFunction.getMembershipFunctionInstance(niskaParams));
-        FuzzySet srednia = new FuzzySet("srednia");
-        srednia.setMembershipFunction(this.membershipFunction.getMembershipFunctionInstance(sredniaParams));
-        FuzzySet wysoka = new FuzzySet("wysoka");
-        wysoka.setMembershipFunction(this.membershipFunction.getMembershipFunctionInstance(wysokaParams));
-        temp.addFuzzySet(niska);
-        temp.addFuzzySet(srednia);
-        temp.addFuzzySet(wysoka);
-        this.inputLinguisticVariables.put(temp.getName(), temp);
-        
-        String piecName = "piec";
-        LinguisticVariable piec = new LinguisticVariable(piecName);
-        FuzzySet piecMocno = new FuzzySet("mocno");
-        piecMocno.setMembershipFunction(this.membershipFunction.getMembershipFunctionInstance(piecMocnoParams));
-        FuzzySet piecSrednio = new FuzzySet("srednio");
-        piecSrednio.setMembershipFunction(this.membershipFunction.getMembershipFunctionInstance(piecSrednioParams));
-        FuzzySet piecLekko = new FuzzySet("lekko");
-        piecLekko.setMembershipFunction(this.membershipFunction.getMembershipFunctionInstance(piecLekkoParams));
-        piec.addFuzzySet(piecMocno);
-        piec.addFuzzySet(piecSrednio);
-        piec.addFuzzySet(piecLekko);
-        this.outputLinguisticVariables.put(piec.getName(), piec);
-                
+        this.generateOneTypeSentences(inputLinguisticVariables);
+        this.generateOneTypeSentences(outputLinguisticVariables);
+    }
+    
+    private void generateOneTypeSentences(HashMap<String, LinguisticVariable> variables)
+    {
+        for (String key : variables.keySet()) {
+            LinguisticVariable variable = variables.get(key);
+            String variableName = variable.getName();
+            
+            for (String termKey : variable.getSetsKeys()) {
+                Sentence sentence = new Sentence();
+                try {
+                    sentence.setParams(variable, termKey);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    System.exit(1);
+                }
+                this.sentences.put(variableName+termKey, sentence);
+            }
+        }
     }
     
     public void createRules()
     {
-        Sentence zimno = new Sentence(), letnio = new Sentence(), cieplo = new Sentence(), grzejLekko = new Sentence(), grzejSrednio = new Sentence(), grzejMocno = new Sentence();
-        try {
-            zimno.setParams(this.inputLinguisticVariables.get("temperatura"), "niska");
-            letnio.setParams(this.inputLinguisticVariables.get("temperatura"), "srednia");
-            cieplo.setParams(this.inputLinguisticVariables.get("temperatura"), "wysoka");
-
-            grzejLekko.setParams(this.outputLinguisticVariables.get("piec"), "lekko");
-            grzejSrednio.setParams(this.outputLinguisticVariables.get("piec"), "srednio");
-            grzejMocno.setParams(this.outputLinguisticVariables.get("piec"), "mocno");
-        } catch(Exception e) {
-            System.out.printf("%s", e.getMessage());
+        
+        this.writeOutput("Define rules (END_RULES to finish): " + System.getProperty("line.separator"));
+        String rulesInput;
+        while (!(rulesInput = this.getInputLine(System.getProperty("line.separator"))).equals("END_RULES")) {
+            if (!rulesInput.equals("BEGIN_RULES")) {
+                String[] splitedByThen = rulesInput.split(" THEN ");
+                String[] precedents = splitedByThen[0].split(" ");
+                String consequent = splitedByThen[1];
+                Rule rule = new Rule();
+                for (String precedent : precedents) {
+                    String[] sentenceStrings = precedent.split("=");
+                    Sentence sentence = this.sentences.get(sentenceStrings[0]+sentenceStrings[1]);
+                    rule.addInputSentence(sentence);
+                }
+                String[] sentenceStrings = consequent.split("=");
+                Sentence sentence = this.sentences.get(sentenceStrings[0]+sentenceStrings[1]);
+                rule.setOutputSentence(sentence);
+                this.rules.add(rule);
+            }
         }
         
-        this.sentences.add(zimno);
-        this.sentences.add(letnio);
-        this.sentences.add(cieplo);
-        this.sentences.add(grzejLekko);
-        this.sentences.add(grzejSrednio);
-        this.sentences.add(grzejMocno);
-        Rule rule1 = new Rule();
-        rule1.addInputSentence(zimno);
-        rule1.setOutputSentence(grzejMocno);
-        Rule rule2 = new Rule();
-        rule2.addInputSentence(letnio);
-        rule2.setOutputSentence(grzejSrednio);
-        Rule rule3 = new Rule();
-        rule3.addInputSentence(cieplo);
-        rule3.setOutputSentence(grzejLekko);
-        
-        this.rules.add(rule1);
-        this.rules.add(rule2);
-        this.rules.add(rule3);
     }
     
     public void calculateSentencesMembership()
     {
-        for (Sentence sentence : this.sentences) {
-             String name = sentence.getName();
-             String term = sentence.getTerm();
-             LinguisticVariable variable = this.getLinguisticVariableByName(name);
-             FuzzySet set = variable.getSetByName(term);
-             MembershipFunction mFunction = set.getMembershipFunction();
-             Double value = this.userInput.get(name);
-             sentence.setMembershipValue(mFunction.calculateMembership(value));
-             
+        for (String sentenceKey : this.sentences.keySet()) {
+            Sentence sentence = this.sentences.get(sentenceKey);
+            String name = sentence.getName();
+            String term = sentence.getTerm();
+            LinguisticVariable variable = this.getLinguisticVariableByName(name);
+            FuzzySet set = variable.getSetByName(term);
+            MembershipFunction mFunction = set.getMembershipFunction();
+            Double value = this.userInput.get(name);
+            sentence.setMembershipValue(mFunction.calculateMembership(value)); 
         }
     }
     
     public void getSystemInput()
     { 
-        this.userInput = new HashMap();
-        this.userInput.put("piec", 80.0);
-        this.userInput.put("temperatura", 10.1);
+        this.writeOutput("Please specify system datas.");
+        for (String key : this.inputLinguisticVariables.keySet()) {
+            LinguisticVariable variable = this.inputLinguisticVariables.get(key);
+            this.userInput.put(key, Double.parseDouble(this.getInputLine("Insert value for "+key+": ")));
+        }
     }
     
     public void makeImplications()
@@ -271,6 +255,26 @@ public class FuzzySystem {
         }
         
         return rulesValues;
+    }
+    
+    public void writeOutput(String message)
+    {
+        System.out.print(message);
+    }
+    
+    public String getInputLine(String requetMessage)
+    {
+        String input = null;
+        try {
+            System.out.print(requetMessage);
+            input = this.reader.readLine();
+        } catch (IOException ioe) {
+             System.out.println("IO error trying to read your name!");
+             System.exit(1);
+        }
+        
+        return input;
+        
     }
     
 }

@@ -1,0 +1,25 @@
+triangle
+fodor
+minimum
+standard
+BEGIN_INPUT_VARS
+temperatura
+BEGIN_TERMS
+niska a 0.0 b 5.0 c 10.0
+srednia a 7.0 b 15.0 c 20.0
+wysoka a 18.0 b 25.0 c 34.0
+END_TERMS
+END_INPUT_VARS
+BEGIN_OUTPUT_VARS
+piec
+BEGIN_TERMS
+lekko a 40.0 b 50.0 c 55.0
+srednio a 50.0 b 65.0 c 70.0
+mocno a 65.0 b 80.0 c 90.0
+END_TERMS
+END_OUTPUT_VARS
+BEGIN_RULES
+temperatura=niska THEN piec=mocno
+temperatura=srednia THEN piec=srednio
+temperatura=wysoka THEN piec=lekko
+END_RULES

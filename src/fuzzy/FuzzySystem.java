@@ -6,6 +6,9 @@ package fuzzy;
 
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
@@ -30,6 +33,7 @@ public class FuzzySystem {
     private HashMap<String, LinguisticVariable> outputLinguisticVariables;
     private HashMap<String, LinguisticVariable> inputLinguisticVariables;
     private final BufferedReader reader;
+    private BufferedReader fileReader;
     
     FuzzySystem()
     {
@@ -43,11 +47,32 @@ public class FuzzySystem {
     
     public void run() 
     {
-        this.getProgrammingConfigurationFromUser();
-        this.getInputVariablesFromUser();
-        this.getOutputVariablesFromUser();
-        this.generateSentences();
-        this.createRules();
+        Integer userChoose = this.getUserInputChoose();
+        if (userChoose.equals(1)) {
+            this.getProgrammingConfigurationFromUser();
+            this.getInputVariablesFromUser();
+            this.getOutputVariablesFromUser();
+            this.generateSentences();
+            this.createRules();
+        } else if (userChoose.equals(2)) {
+            String filePath = this.getInputLine("Type file path to read configuration: ");
+            try {
+                this.fileReader = new BufferedReader(new FileReader(new File(filePath)));
+            } catch (FileNotFoundException ex) {
+                this.writeOutput("There is no such file");
+                System.exit(1);
+            }
+            try {
+                this.readConfigurationFromFile();
+            } catch (IOException ex) {
+                this.writeOutput("Something is wrong in file");
+                System.exit(1);
+            }
+        } else {
+            writeOutput("Wrong choose");
+            System.exit(1);
+        }
+        
         this.getSystemInput();
         this.calculateSentencesMembership();
         this.makeImplications();
@@ -194,10 +219,15 @@ public class FuzzySystem {
     
     public void getSystemInput()
     { 
-        this.writeOutput("Please specify system datas.");
+        this.userInput = new HashMap();
+        this.writeOutput("Please specify system datas."+System.getProperty("line.separator"));
         for (String key : this.inputLinguisticVariables.keySet()) {
-            LinguisticVariable variable = this.inputLinguisticVariables.get(key);
-            this.userInput.put(key, Double.parseDouble(this.getInputLine("Insert value for "+key+": ")));
+            Double value = Double.parseDouble(this.getInputLine("Insert value for "+key+": "));
+            this.userInput.put(key, value);
+        }
+        for (String key : this.outputLinguisticVariables.keySet()) {
+            Double value = Double.parseDouble(this.getInputLine("Insert value for "+key+": "));
+            this.userInput.put(key, value);
         }
     }
     
@@ -222,7 +252,6 @@ public class FuzzySystem {
     
     public void showResult()
     {
-        
         System.out.println(this.aggregationResult.toString());
     }
     
@@ -274,6 +303,78 @@ public class FuzzySystem {
         }
         
         return input;
+        
+    }
+
+    private Integer getUserInputChoose() {
+        return Integer.parseInt(this.getInputLine("Type 1 for input configuration manually or 2 for input from file: "));
+    }
+
+    private void readConfigurationFromFile() throws IOException {
+        
+        String mFunctionName = this.fileReader.readLine();
+        String implicationOperatorName = this.fileReader.readLine();
+        String aggregationOperatorName = this.fileReader.readLine();
+        String normsName = this.fileReader.readLine();
+        this.initialize(mFunctionName, implicationOperatorName, aggregationOperatorName, normsName);            
+        
+        
+        String varsInput;
+        while (!(varsInput = this.fileReader.readLine()).equals("END_INPUT_VARS")) {
+            if (!varsInput.equals("BEGIN_INPUT_VARS")) {
+                String lingVarName = varsInput;
+                LinguisticVariable lingVar = new LinguisticVariable(lingVarName);
+                String termsInput;
+                while (!(termsInput = this.fileReader.readLine()).equals("END_TERMS")) {
+                    if (!termsInput.equals("BEGIN_TERMS")) {
+                        String[] termParams = termsInput.split(" ");
+                        FuzzySet term = new FuzzySet(termParams, this.membershipFunction);
+                        lingVar.addFuzzySet(term);
+                    }
+                }
+                this.inputLinguisticVariables.put(lingVar.getName(), lingVar);
+            }
+        }
+        
+        while (!(varsInput = this.fileReader.readLine()).equals("END_OUTPUT_VARS")) {
+            if (!varsInput.equals("BEGIN_OUTPUT_VARS")) {
+                String lingVarName = varsInput;
+                LinguisticVariable lingVar = new LinguisticVariable(lingVarName);
+                String termsInput;
+                while (!(termsInput = this.fileReader.readLine()).equals("END_TERMS")) {
+                    if (!termsInput.equals("BEGIN_TERMS")) {
+                        String[] termParams = termsInput.split(" ");
+                        FuzzySet term = new FuzzySet(termParams, this.membershipFunction);
+                        lingVar.addFuzzySet(term);
+                    }
+                }
+                this.outputLinguisticVariables.put(lingVar.getName(), lingVar);
+            }
+        }
+        
+        this.generateSentences();
+        
+        String rulesInput;
+        while (!(rulesInput = this.fileReader.readLine()).equals("END_RULES")) {
+            if (!rulesInput.equals("BEGIN_RULES")) {
+                String[] splitedByThen = rulesInput.split(" THEN ");
+                String[] precedents = splitedByThen[0].split(" ");
+                String consequent = splitedByThen[1];
+                Rule rule = new Rule();
+                for (String precedent : precedents) {
+                    String[] sentenceStrings = precedent.split("=");
+                    Sentence sentence = this.sentences.get(sentenceStrings[0]+sentenceStrings[1]);
+                    if (sentence.equals(null)) {
+                        this.writeOutput("There is no possible sentence: "+sentenceStrings[0]+"="+sentenceStrings[1]+". Check your config file.");
+                    }
+                    rule.addInputSentence(sentence);
+                }
+                String[] sentenceStrings = consequent.split("=");
+                Sentence sentence = this.sentences.get(sentenceStrings[0]+sentenceStrings[1]);
+                rule.setOutputSentence(sentence);
+                this.rules.add(rule);
+            }
+        }
         
     }
     

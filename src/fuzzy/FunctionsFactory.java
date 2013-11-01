@@ -57,8 +57,7 @@ public class FunctionsFactory {
     {
         Class<MembershipFunction> productClass = (Class<MembershipFunction>)this.registeredMembershipFunctions.get(membershipFunctionName);
         Constructor<MembershipFunction> constructor = productClass.getDeclaredConstructor();
-        return constructor.newInstance();
-        
+        return constructor.newInstance();        
     }
 
     public ImplicationOperator getImplicationOperator(String implicationOperatorName) throws Exception {

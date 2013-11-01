@@ -15,7 +15,8 @@ public class TriangleMembershipFunction implements MembershipFunction{
     private double a;
     private double b;
     private double c;
-
+    
+    
     public TriangleMembershipFunction() {
     }
     
@@ -34,10 +35,10 @@ public class TriangleMembershipFunction implements MembershipFunction{
     }
     
     @Override
-    public double calculateMembership(double element)
+    public Double calculateMembership(Double element)
     {
-        double element1 = (element - this.a) / (this.b - this.a);
-        double element2 = (this.c - element) / (this.c - this.b);
+        Double element1 = (element - this.a) / (this.b - this.a);
+        Double element2 = (this.c - element) / (this.c - this.b);
         Double result = Math.max(Math.min(element1, element2), 0);
         return result;
     }

@@ -140,6 +140,10 @@ public class FuzzySystem {
             )
     {
         FunctionsFactory fFactory = new FunctionsFactory();
+        fFactory.registerMembershipFunction("triangle", TriangleMembershipFunction.class);
+        fFactory.registerImplicationOperator("fodor", FodorImplicationOperator.class);
+        fFactory.registerAggregationOperator("minimum", MinimumAggregationOperator.class);
+        fFactory.registerNorm("standard", StandardNorms.class);
         try {
             this.membershipFunction = fFactory.getMembershipFunction(membershipFunctionName);
             this.implicationOperator = fFactory.getImplicationOperator(implicationOperatorName);
@@ -149,6 +153,7 @@ public class FuzzySystem {
             System.out.println(ex.getMessage());
             System.exit(1);
         }
+        
         
     }
     

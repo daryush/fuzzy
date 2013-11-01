@@ -12,5 +12,5 @@ import java.util.HashMap;
  */
 interface MembershipFunction {
         public MembershipFunction getMembershipFunctionInstance(HashMap<String, Double> params);
-        public double calculateMembership(double element);
+        public Double calculateMembership(Double element);
 }

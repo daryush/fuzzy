@@ -13,7 +13,14 @@ import java.util.*;
 public class Rule {
     ArrayList<Sentence> inputSentences;
     Sentence outputSentence;
-    Double implicationResult;
+    ImplicationResults implicationResult;
+    protected Double tskParameter;
+    protected Double y;
+    
+    public void setTskParameter(Double parameter)
+    {
+        this.tskParameter = parameter;
+    }
     
     Rule()
     {
@@ -40,21 +47,29 @@ public class Rule {
         return memberships;
     }
     
-    Double getImplicationResult()
+    ImplicationResults getImplicationResult()
     {
         return this.implicationResult;
     }
     
-    void setImplicationResult(Double result)
+    void setImplicationResult(ImplicationResults result)
     {
         this.implicationResult = result;
     }
 
-    void makeImplication(ImplicationOperator implicationOperator, Norms norms) {
-        this.implicationResult = implicationOperator.implicate(this.getInputSentencesMemberships(), this.outputSentence.getMembershipValue(), norms);
+    void makeImplication(ImplicationOperator implicationOperator, Norms norms, HashMap<String, Double> userInput) {
+        this.implicationResult = implicationOperator.implicate(this.inputSentences, this.tskParameter, norms, userInput);
     }
 
     Sentence getOutputSentence() {
         return this.outputSentence;
+    }
+
+    void calculateY(HashMap<String, Double>userInput) {
+        
+    }
+
+    Double getY() {
+        return this.y;
     }
 }

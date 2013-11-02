@@ -4,12 +4,12 @@
  */
 package fuzzy;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
  * @author daryush
  */
 interface AggregationOperator {
-    Double aggregateResults(ArrayList<Double> rulesValues);
+    Double aggregateResults(HashMap<String, ImplicationResults> rulesValues);
 }

@@ -4,7 +4,7 @@
  */
 package fuzzy;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.lang.Math.*;
 
 /**
@@ -16,13 +16,13 @@ public class MinimumAggregationOperator implements AggregationOperator{
     private Double min;
 
     @Override
-    public Double aggregateResults(ArrayList<Double> rulesValues) {
+    public Double aggregateResults(HashMap<String, ImplicationResults> rulesValues) {
         this.min = 0.0;
-        for (Double ruleValue : rulesValues) {
-            if (ruleValue < min) {
-                this.min = ruleValue;
-            }
-        }
+//        for (Double ruleValue : rulesValues) {
+//            if (ruleValue < min) {
+//                this.min = ruleValue;
+//            }
+//        }
         return this.min;
     }
     

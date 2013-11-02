@@ -13,6 +13,12 @@ public class Sentence {
     protected String term;
     protected Double membershipFunctionValue;
     protected LinguisticVariable linguisticVariable;
+    protected Double tskParameter;
+    
+    public void setTskParameter(Double parameter)
+    {
+        this.tskParameter = parameter;
+    }
     
     public void setParams(LinguisticVariable variable, String term) throws Exception  
     {
@@ -37,6 +43,10 @@ public class Sentence {
 
     void setMembershipValue(double value) {
         this.membershipFunctionValue = value;
+    }
+
+    Double getTskParam() {
+        return this.tskParameter;
     }
 
     

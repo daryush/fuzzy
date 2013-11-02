@@ -142,7 +142,9 @@ public class FuzzySystem {
         FunctionsFactory fFactory = new FunctionsFactory();
         fFactory.registerMembershipFunction("triangle", TriangleMembershipFunction.class);
         fFactory.registerImplicationOperator("fodor", FodorImplicationOperator.class);
+        fFactory.registerImplicationOperator("tsk", TSKImplicationOperator.class);
         fFactory.registerAggregationOperator("minimum", MinimumAggregationOperator.class);
+        fFactory.registerAggregationOperator("average", AverageAggregationOperator.class);
         fFactory.registerNorm("standard", StandardNorms.class);
         try {
             this.membershipFunction = fFactory.getMembershipFunction(membershipFunctionName);
@@ -234,12 +236,23 @@ public class FuzzySystem {
             Double value = Double.parseDouble(this.getInputLine("Insert value for "+key+": "));
             this.userInput.put(key, value);
         }
+        Integer ruleIndex = 1;
+        for (Rule rule : this.rules) {
+            this.writeOutput("Input parameters for rule "+ruleIndex.toString()+":"+System.getProperty("line.separator"));
+            Double ruleParam = Double.parseDouble(this.getInputLine("Insert free value for rule "+ruleIndex.toString()+": "));
+            rule.setTskParameter(ruleParam);
+            for (Sentence sentence : rule.inputSentences) {
+               Double sentenceParam = Double.parseDouble(this.getInputLine("Insert value for "+sentence.getName()+": "));
+               sentence.setTskParameter(sentenceParam);
+            }
+            ruleIndex++;
+        }
     }
     
     public void makeImplications()
     {
         for (Rule rule : this.rules) {
-            rule.makeImplication(this.implicationOperator, this.norms);            
+            rule.makeImplication(this.implicationOperator, this.norms, this.userInput);
         }
     }
         
@@ -248,7 +261,7 @@ public class FuzzySystem {
         
         for (String key : this.outputLinguisticVariables.keySet()) {
             String variableName = outputLinguisticVariables.get(key).getName();
-            ArrayList<Double> rulesValues = this.getRulesImplicatonsValues(variableName);
+            HashMap<String, ImplicationResults> rulesValues = this.getRulesImplicatonsValues(variableName);
             this.aggregationResult.put(variableName, this.aggregationOperator.aggregateResults(rulesValues)); 
         }
        
@@ -279,13 +292,15 @@ public class FuzzySystem {
         return this.implicationOperator;
     }
 
-    private ArrayList<Double> getRulesImplicatonsValues(String variableName) {
-        ArrayList<Double> rulesValues = new ArrayList();
+    private HashMap<String, ImplicationResults> getRulesImplicatonsValues(String variableName) {
+        HashMap<String, ImplicationResults> rulesValues = new HashMap();
+        Integer ruleIndex = 1;
         for (Iterator<Rule> it = this.rules.iterator(); it.hasNext();) {
-            Rule rule = it.next();
+            Rule rule = it.next(); 
             if (rule.getOutputSentence().getName().equals(variableName)) {
-                rulesValues.add(rule.getImplicationResult());
+                rulesValues.put(variableName+ruleIndex.toString(), rule.getImplicationResult());
             }
+            ruleIndex++;
         }
         
         return rulesValues;

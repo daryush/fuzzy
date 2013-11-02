@@ -4,6 +4,7 @@
  */
 package fuzzy;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -11,6 +12,6 @@ import java.util.List;
  * @author daryush
  */
 interface ImplicationOperator {
-    public Double implicate(List<Double> precedents, Double consequent, Norms norms);
+    public ImplicationResults implicate(List<Sentence> precedents, Double ruleTskParameter, Norms norms, HashMap<String, Double> userInput);
     
 }

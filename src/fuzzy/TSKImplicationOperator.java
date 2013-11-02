@@ -8,23 +8,29 @@ import java.util.*;
  *
  * @author daryush
  */
-public class FodorImplicationOperator implements ImplicationOperator{
+public class TSKImplicationOperator implements ImplicationOperator{
     
     @Override
     public ImplicationResults implicate(List<Sentence> precedents, Double ruleTskParameter, Norms norms, HashMap<String, Double> userInput)
     {
         
-//        Double relationResult;
-//        relationResult = this.getRelationResult(precedents, norms);
-//        Double miResult;
-//        
-//        if (relationResult < consequent) {
-//            miResult = 1.0;
-//        } else {
-//            miResult = consequent;
-//        }
-        ImplicationResults result = new ImplicationResults(0.0, 0.0);
+        Double relationResult;
+        relationResult = this.getRelationResult(precedents, norms);
+        
+        Double yParam = 0.0;
+        for (Sentence sentence : precedents) {
+            yParam += sentence.getTskParam()*userInput.get(sentence.getName());
+        }
+        
+        ImplicationResults result = new ImplicationResults(relationResult, yParam);
         return result;
+//        if (relationResult < consequent) {
+//            result = 1.0;
+//        } else {
+//            result = consequent;
+//        }
+//                
+//        return result;
     }
     
     private Double getRelationResult(List<Sentence> precedents, Norms norms)

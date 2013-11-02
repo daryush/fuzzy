@@ -1,11 +1,11 @@
 triangle
-fodor
-minimum
+tsk
+average
 standard
 BEGIN_INPUT_VARS
 temperatura
 BEGIN_TERMS
-niska a 0.0 b 5.0 c 10.0
+niska a 0.0 b 5.0 c 15.0
 srednia a 7.0 b 15.0 c 20.0
 wysoka a 18.0 b 25.0 c 34.0
 END_TERMS

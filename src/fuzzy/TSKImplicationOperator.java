@@ -17,7 +17,7 @@ public class TSKImplicationOperator implements ImplicationOperator{
         Double relationResult;
         relationResult = this.getRelationResult(precedents, norms);
         
-        Double yParam = 0.0;
+        Double yParam = ruleTskParameter;
         for (Sentence sentence : precedents) {
             yParam += sentence.getTskParam()*userInput.get(sentence.getName());
         }

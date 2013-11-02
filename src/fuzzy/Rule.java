@@ -12,7 +12,7 @@ import java.util.*;
  */
 public class Rule {
     ArrayList<Sentence> inputSentences;
-    Sentence outputSentence;
+    LinguisticVariable outputVariable;
     ImplicationResults implicationResult;
     protected Double tskParameter;
     protected Double y;
@@ -31,8 +31,8 @@ public class Rule {
         this.inputSentences.add(sentence);
     }
 
-    void setOutputSentence(Sentence sentence) {
-        this.outputSentence = sentence;
+    void setOutputVariable(LinguisticVariable variable) {
+        this.outputVariable = variable;
     }
     
     List<Double> getInputSentencesMemberships()
@@ -61,8 +61,8 @@ public class Rule {
         this.implicationResult = implicationOperator.implicate(this.inputSentences, this.tskParameter, norms, userInput);
     }
 
-    Sentence getOutputSentence() {
-        return this.outputSentence;
+    LinguisticVariable getOutputVariable() {
+        return this.outputVariable;
     }
 
     void calculateY(HashMap<String, Double>userInput) {
@@ -72,4 +72,6 @@ public class Rule {
     Double getY() {
         return this.y;
     }
+
+
 }

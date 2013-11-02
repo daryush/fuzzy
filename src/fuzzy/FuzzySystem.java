@@ -53,7 +53,12 @@ public class FuzzySystem {
             this.getInputVariablesFromUser();
             this.getOutputVariablesFromUser();
             this.generateSentences();
-            this.createRules();
+            try {
+                this.createRules();
+            } catch (Exception ex) {
+                this.writeOutput("Something is wrong with this rule. "+ex.getMessage());
+                System.exit(1);
+            }
         } else if (userChoose.equals(2)) {
             String filePath = this.getInputLine("Type file path to read configuration: ");
             try {
@@ -64,8 +69,8 @@ public class FuzzySystem {
             }
             try {
                 this.readConfigurationFromFile();
-            } catch (IOException ex) {
-                this.writeOutput("Something is wrong in file");
+            } catch (Exception ex) {
+                this.writeOutput("Something goes wrong while reading config file. "+ex.getMessage());
                 System.exit(1);
             }
         } else {
@@ -163,7 +168,7 @@ public class FuzzySystem {
     public void generateSentences()
     {
         this.generateOneTypeSentences(inputLinguisticVariables);
-        this.generateOneTypeSentences(outputLinguisticVariables);
+        //this.generateOneTypeSentences(outputLinguisticVariables);
     }
     
     private void generateOneTypeSentences(HashMap<String, LinguisticVariable> variables)
@@ -185,25 +190,35 @@ public class FuzzySystem {
         }
     }
     
-    public void createRules()
+    public void createRules() throws Exception
     {
         
         this.writeOutput("Define rules (END_RULES to finish): " + System.getProperty("line.separator"));
         String rulesInput;
         while (!(rulesInput = this.getInputLine(System.getProperty("line.separator"))).equals("END_RULES")) {
             if (!rulesInput.equals("BEGIN_RULES")) {
-                String[] splitedByThen = rulesInput.split(" THEN ");
-                String[] precedents = splitedByThen[0].split(" ");
-                String consequent = splitedByThen[1];
+                String[] splitedByThen = rulesInput.split("THEN");
+                String[] precedents = splitedByThen[0].trim().split(" ");
+                String consequent = splitedByThen[1].trim().split("is")[0].trim();
+                String[] consequentParams = splitedByThen[1].split("is")[1].trim().split(" ");
+                
+                if (precedents.length+1 != consequentParams.length) {
+                   throw new Exception("Somethins is wrong with consequent parameters in rule: "+rulesInput);
+                }
                 Rule rule = new Rule();
+                rule.setTskParameter(Double.parseDouble(consequentParams[consequentParams.length-1]));
+                Integer precedentIndex = 0;
                 for (String precedent : precedents) {
                     String[] sentenceStrings = precedent.split("=");
                     Sentence sentence = this.sentences.get(sentenceStrings[0]+sentenceStrings[1]);
+                    if (sentence == null) {
+                        throw new Exception("There is no possible sentence: "+sentenceStrings[0]+"="+sentenceStrings[1]+". Check your config file.");
+                    }
+                    sentence.setTskParameter(Double.parseDouble(consequentParams[precedentIndex]));
                     rule.addInputSentence(sentence);
+                    precedentIndex++;
                 }
-                String[] sentenceStrings = consequent.split("=");
-                Sentence sentence = this.sentences.get(sentenceStrings[0]+sentenceStrings[1]);
-                rule.setOutputSentence(sentence);
+                rule.setOutputVariable(this.outputLinguisticVariables.get(consequent));
                 this.rules.add(rule);
             }
         }
@@ -231,21 +246,6 @@ public class FuzzySystem {
         for (String key : this.inputLinguisticVariables.keySet()) {
             Double value = Double.parseDouble(this.getInputLine("Insert value for "+key+": "));
             this.userInput.put(key, value);
-        }
-        for (String key : this.outputLinguisticVariables.keySet()) {
-            Double value = Double.parseDouble(this.getInputLine("Insert value for "+key+": "));
-            this.userInput.put(key, value);
-        }
-        Integer ruleIndex = 1;
-        for (Rule rule : this.rules) {
-            this.writeOutput("Input parameters for rule "+ruleIndex.toString()+":"+System.getProperty("line.separator"));
-            Double ruleParam = Double.parseDouble(this.getInputLine("Insert free value for rule "+ruleIndex.toString()+": "));
-            rule.setTskParameter(ruleParam);
-            for (Sentence sentence : rule.inputSentences) {
-               Double sentenceParam = Double.parseDouble(this.getInputLine("Insert value for "+sentence.getName()+": "));
-               sentence.setTskParameter(sentenceParam);
-            }
-            ruleIndex++;
         }
     }
     
@@ -297,7 +297,7 @@ public class FuzzySystem {
         Integer ruleIndex = 1;
         for (Iterator<Rule> it = this.rules.iterator(); it.hasNext();) {
             Rule rule = it.next(); 
-            if (rule.getOutputSentence().getName().equals(variableName)) {
+            if (rule.getOutputVariable().getName().equals(variableName)) {
                 rulesValues.put(variableName+ruleIndex.toString(), rule.getImplicationResult());
             }
             ruleIndex++;
@@ -330,7 +330,7 @@ public class FuzzySystem {
         return Integer.parseInt(this.getInputLine("Type 1 for input configuration manually or 2 for input from file: "));
     }
 
-    private void readConfigurationFromFile() throws IOException {
+    private void readConfigurationFromFile() throws IOException, Exception {
         
         String mFunctionName = this.fileReader.readLine();
         String implicationOperatorName = this.fileReader.readLine();
@@ -360,14 +360,6 @@ public class FuzzySystem {
             if (!varsInput.equals("BEGIN_OUTPUT_VARS")) {
                 String lingVarName = varsInput;
                 LinguisticVariable lingVar = new LinguisticVariable(lingVarName);
-                String termsInput;
-                while (!(termsInput = this.fileReader.readLine()).equals("END_TERMS")) {
-                    if (!termsInput.equals("BEGIN_TERMS")) {
-                        String[] termParams = termsInput.split(" ");
-                        FuzzySet term = new FuzzySet(termParams, this.membershipFunction);
-                        lingVar.addFuzzySet(term);
-                    }
-                }
                 this.outputLinguisticVariables.put(lingVar.getName(), lingVar);
             }
         }
@@ -377,21 +369,29 @@ public class FuzzySystem {
         String rulesInput;
         while (!(rulesInput = this.fileReader.readLine()).equals("END_RULES")) {
             if (!rulesInput.equals("BEGIN_RULES")) {
-                String[] splitedByThen = rulesInput.split(" THEN ");
-                String[] precedents = splitedByThen[0].split(" ");
-                String consequent = splitedByThen[1];
+                String[] splitedByThen = rulesInput.split("THEN");
+                String[] precedents = splitedByThen[0].trim().split(" ");
+                String consequent = splitedByThen[1].trim().split("is")[0].trim();
+                String[] consequentParams = splitedByThen[1].split("is")[1].trim().split(" ");
+                
+                if (precedents.length+1 != consequentParams.length) {
+                   throw new Exception("Somethins is wrong with consequent parameters in rule: "+rulesInput);
+                }
                 Rule rule = new Rule();
+                rule.setTskParameter(Double.parseDouble(consequentParams[consequentParams.length-1]));
+                Integer precedentIndex = 0;
                 for (String precedent : precedents) {
+                    
                     String[] sentenceStrings = precedent.split("=");
                     Sentence sentence = this.sentences.get(sentenceStrings[0]+sentenceStrings[1]);
-                    if (sentence.equals(null)) {
-                        this.writeOutput("There is no possible sentence: "+sentenceStrings[0]+"="+sentenceStrings[1]+". Check your config file.");
+                    if (sentence == null) {
+                        throw new Exception("There is no possible sentence: "+sentenceStrings[0]+"="+sentenceStrings[1]+". Check your config file.");
                     }
+                    sentence.setTskParameter(Double.parseDouble(consequentParams[precedentIndex]));
                     rule.addInputSentence(sentence);
+                    precedentIndex++;
                 }
-                String[] sentenceStrings = consequent.split("=");
-                Sentence sentence = this.sentences.get(sentenceStrings[0]+sentenceStrings[1]);
-                rule.setOutputSentence(sentence);
+                rule.setOutputVariable(this.outputLinguisticVariables.get(consequent));
                 this.rules.add(rule);
             }
         }

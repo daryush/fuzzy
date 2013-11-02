@@ -1,0 +1,24 @@
+triangle
+tsk
+average
+standard
+BEGIN_INPUT_VARS
+x
+BEGIN_TERMS
+niska a -20.0 b -10.0 c 0.0
+srednia a -10.0 b 0.0 c 10.0
+wysoka a 0.0 b 10.0 c 20.0
+END_TERMS
+END_INPUT_VARS
+BEGIN_OUTPUT_VARS
+y
+z
+END_OUTPUT_VARS
+BEGIN_RULES
+x=niska THEN y is 0.1 6.4
+x=srednia THEN y is -0.5 4
+x=wysoka THEN y is 1 -2
+x=niska THEN z is 0.1 6.4
+x=srednia THEN z is -0.5 4
+x=wysoka THEN z is 1 -2
+END_RULES

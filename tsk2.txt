@@ -1,0 +1,25 @@
+triangle
+tsk
+average
+standard
+BEGIN_INPUT_VARS
+x
+BEGIN_TERMS
+small a -12.0 b -5.0 c 2.0
+large a -2.0 b 5.0 c 12.0
+END_TERMS
+y
+BEGIN_TERMS
+small a -15.0 b -5.0 c 5.0
+large a -5.0 b 5.0 c 15.0
+END_TERMS
+END_INPUT_VARS
+BEGIN_OUTPUT_VARS
+z
+END_OUTPUT_VARS
+BEGIN_RULES
+x=small y=small THEN z is -1 1 1
+x=small y=large THEN z is 0 -1 3
+x=large y=small THEN z is -1 0 3
+x=large y=large THEN z is 1 1 2
+END_RULES

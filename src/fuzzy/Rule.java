@@ -10,12 +10,16 @@ import java.util.*;
  *
  * @author daryush
  */
-public class Rule {
+public class Rule implements Runnable{
     ArrayList<Sentence> inputSentences;
     LinguisticVariable outputVariable;
     ImplicationResults implicationResult;
     protected Double tskParameter;
     protected Double y;
+    
+    protected ImplicationOperator implicationOperator;
+    protected Norms norms;
+    protected HashMap<String, Double> userInput;
     
     public void setTskParameter(Double parameter)
     {
@@ -65,12 +69,20 @@ public class Rule {
         return this.outputVariable;
     }
 
-    void calculateY(HashMap<String, Double>userInput) {
-        
-    }
-
     Double getY() {
         return this.y;
+    }
+
+    @Override
+    public void run() {
+        this.makeImplication(this.implicationOperator, this.norms, this.userInput);
+    }
+
+    void setImplicationParameters(ImplicationOperator implicationOperator, Norms norms, HashMap<String, Double> userInput) {
+        this.implicationOperator = implicationOperator;
+        this.norms = norms;
+        this.userInput = userInput;
+                
     }
 
 

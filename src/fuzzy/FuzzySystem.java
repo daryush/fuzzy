@@ -77,7 +77,6 @@ public class FuzzySystem {
             writeOutput("Wrong choose");
             System.exit(1);
         }
-        
         this.getSystemInput();
         this.calculateSentencesMembership();
         this.makeImplications();
@@ -252,7 +251,14 @@ public class FuzzySystem {
     public void makeImplications()
     {
         for (Rule rule : this.rules) {
-            rule.makeImplication(this.implicationOperator, this.norms, this.userInput);
+            rule.setImplicationParameters(this.implicationOperator, this.norms, this.userInput);
+            Thread t = new Thread(rule);
+            t.start();
+            try {
+                t.join();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(FuzzySystem.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
         

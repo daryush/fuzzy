@@ -228,6 +228,7 @@ public class FuzzySystem {
     
     public void calculateSentencesMembership()
     {
+        ExecutorService exec = Executors.newFixedThreadPool(Math.min(this.sentences.size(), Runtime.getRuntime().availableProcessors()));
         for (String sentenceKey : this.sentences.keySet()) {
             Sentence sentence = this.sentences.get(sentenceKey);
             String name = sentence.getName();
@@ -236,8 +237,12 @@ public class FuzzySystem {
             FuzzySet set = variable.getSetByName(term);
             MembershipFunction mFunction = set.getMembershipFunction();
             Double value = this.userInput.get(name);
-            sentence.setMembershipValue(mFunction.calculateMembership(value)); 
+            sentence.setMembershipFunction(mFunction, value);
+            exec.execute(sentence);
         }
+        exec.shutdown();
+        while (!exec.isTerminated())
+            ;
     }
     
     public void getSystemInput()

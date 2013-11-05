@@ -8,12 +8,14 @@ package fuzzy;
  *
  * @author daryush
  */
-public class Sentence {
+public class Sentence implements Runnable{
     protected String name;
     protected String term;
     protected Double membershipFunctionValue;
     protected LinguisticVariable linguisticVariable;
     protected Double tskParameter;
+    protected MembershipFunction mFunction;
+    protected Double userValue;
     
     public void setTskParameter(Double parameter)
     {
@@ -47,6 +49,16 @@ public class Sentence {
 
     Double getTskParam() {
         return this.tskParameter;
+    }
+
+    void setMembershipFunction(MembershipFunction mFunction, Double value) {
+        this.mFunction = mFunction;
+        this.userValue = value;
+    }
+
+    @Override
+    public void run() {
+        this.setMembershipValue(this.mFunction.calculateMembership(userValue));
     }
 
     

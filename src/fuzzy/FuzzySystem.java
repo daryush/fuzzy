@@ -12,6 +12,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -250,21 +252,18 @@ public class FuzzySystem {
     
     public void makeImplications()
     {
+        ExecutorService exec = Executors.newFixedThreadPool(Math.min(this.rules.size(), Runtime.getRuntime().availableProcessors()));
         for (Rule rule : this.rules) {
             rule.setImplicationParameters(this.implicationOperator, this.norms, this.userInput);
-            Thread t = new Thread(rule);
-            t.start();
-            try {
-                t.join();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(FuzzySystem.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            exec.execute(rule);
         }
+        exec.shutdown();
+        while (!exec.isTerminated())
+            ;
     }
         
     public void aggregateResults()
-    {
-        
+    {        
         for (String key : this.outputLinguisticVariables.keySet()) {
             String variableName = outputLinguisticVariables.get(key).getName();
             HashMap<String, ImplicationResults> rulesValues = this.getRulesImplicatonsValues(variableName);

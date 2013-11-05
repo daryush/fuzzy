@@ -12,8 +12,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -43,6 +41,76 @@ public class FuzzySystem {
         this.sentences = new HashMap();
         this.rules = new ArrayList();
         this.reader = new BufferedReader(new InputStreamReader(System.in));
+    }
+    
+    public void runFromFile()
+    {
+        String filePath = this.getInputLine("Type file path to read configuration: ");
+        this.runFromFile(filePath);
+    }
+    
+    public void runInteractive()
+    {
+        
+        this.getProgrammingConfigurationFromUser();
+        this.getInputVariablesFromUser();
+        this.getOutputVariablesFromUser();
+        this.generateSentences();
+        try {
+            this.createRules();
+        } catch (Exception ex) {
+            this.writeOutput("Something is wrong with this rule. "+ex.getMessage());
+            System.exit(1);
+        }
+        this.getSystemInput();
+        this.calculateSentencesMembership();
+        this.makeImplications();
+        this.aggregateResults();
+        this.showResult();
+    }
+    
+    public void runFromFile(String filePath)
+    {
+        try {
+            this.fileReader = new BufferedReader(new FileReader(new File(filePath)));
+        } catch (FileNotFoundException ex) {
+            this.writeOutput("There is no such file");
+            System.exit(1);
+        }
+        try {
+            this.readConfigurationFromFile();
+        } catch (Exception ex) {
+            this.writeOutput("Something goes wrong while reading config file. "+ex.getMessage());
+            System.exit(1);
+        }
+        
+        this.getSystemInput();
+        this.calculateSentencesMembership();
+        this.makeImplications();
+        this.aggregateResults();
+        this.showResult();
+    }
+    
+    public void runFromFile(String filePath, HashMap<String, Double> userInput)
+    {
+        try {
+            this.fileReader = new BufferedReader(new FileReader(new File(filePath)));
+        } catch (FileNotFoundException ex) {
+            this.writeOutput("There is no such file");
+            System.exit(1);
+        }
+        try {
+            this.readConfigurationFromFile();
+        } catch (Exception ex) {
+            this.writeOutput("Something goes wrong while reading config file. "+ex.getMessage());
+            System.exit(1);
+        }
+        
+        this.userInput = userInput;
+        this.calculateSentencesMembership();
+        this.makeImplications();
+        this.aggregateResults();
+        this.showResult();
     }
     
     public void run() 
@@ -85,7 +153,7 @@ public class FuzzySystem {
         this.showResult();
     }
     
-    public void getProgrammingConfigurationFromUser()
+    private void getProgrammingConfigurationFromUser()
     {   
         String mFunctonName = this.getInputLine("Enter mFunction type name (triangle): ");
         String implicationOperatorName = this.getInputLine("Enter implication operator type name (fodor): ");
@@ -95,7 +163,7 @@ public class FuzzySystem {
         
     }
     
-    public void getInputVariablesFromUser()
+    private void getInputVariablesFromUser()
     {
         this.writeOutput("Define input variables (END_INPUT_VARS to finish): " + System.getProperty("line.separator"));
         String varsInput;
@@ -116,7 +184,7 @@ public class FuzzySystem {
         }
     }
     
-    public void getOutputVariablesFromUser()
+    private void getOutputVariablesFromUser()
     {
         this.writeOutput("Define output variables (END_OUTPUT_VARS to finish): " + System.getProperty("line.separator"));
         String varsInput;
@@ -137,7 +205,7 @@ public class FuzzySystem {
         }
     }
     
-    public void initialize(
+    private void initialize(
             String membershipFunctionName,
             String implicationOperatorName,
             String aggregationOperatorName,
@@ -165,7 +233,7 @@ public class FuzzySystem {
     }
     
     
-    public void generateSentences()
+    private void generateSentences()
     {
         this.generateOneTypeSentences(inputLinguisticVariables);
         //this.generateOneTypeSentences(outputLinguisticVariables);
@@ -190,7 +258,7 @@ public class FuzzySystem {
         }
     }
     
-    public void createRules() throws Exception
+    private void createRules() throws Exception
     {
         
         this.writeOutput("Define rules (END_RULES to finish): " + System.getProperty("line.separator"));
@@ -225,7 +293,7 @@ public class FuzzySystem {
         
     }
     
-    public void calculateSentencesMembership()
+    private void calculateSentencesMembership()
     {
         for (String sentenceKey : this.sentences.keySet()) {
             Sentence sentence = this.sentences.get(sentenceKey);
@@ -239,7 +307,7 @@ public class FuzzySystem {
         }
     }
     
-    public void getSystemInput()
+    private void getSystemInput()
     { 
         this.userInput = new HashMap();
         this.writeOutput("Please specify system datas."+System.getProperty("line.separator"));
@@ -249,14 +317,14 @@ public class FuzzySystem {
         }
     }
     
-    public void makeImplications()
+    private void makeImplications()
     {
         for (Rule rule : this.rules) {
             rule.makeImplication(this.implicationOperator, this.norms, this.userInput);
         }
     }
         
-    public void aggregateResults()
+    private void aggregateResults()
     {
         
         for (String key : this.outputLinguisticVariables.keySet()) {
@@ -273,7 +341,7 @@ public class FuzzySystem {
         System.out.println(this.aggregationResult.toString());
     }
     
-    LinguisticVariable getLinguisticVariableByName(String name)
+    private LinguisticVariable getLinguisticVariableByName(String name)
     {
         if(this.outputLinguisticVariables.containsKey(name)) {
             return this.outputLinguisticVariables.get(name);
@@ -283,12 +351,12 @@ public class FuzzySystem {
         return null;
     }
     
-    Norms getNorms()
+    private Norms getNorms()
     {
         return this.norms;
     }
     
-    public ImplicationOperator getImplicationOperator(){
+    private ImplicationOperator getImplicationOperator(){
         return this.implicationOperator;
     }
 
@@ -306,12 +374,12 @@ public class FuzzySystem {
         return rulesValues;
     }
     
-    public void writeOutput(String message)
+    private void writeOutput(String message)
     {
         System.out.print(message);
     }
     
-    public String getInputLine(String requetMessage)
+    private String getInputLine(String requetMessage)
     {
         String input = null;
         try {
